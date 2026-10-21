@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  <!-- High-CTR SEO Meta -->
+  <title>GitHub Downloader ⚡ Download Specific Folders, Subdirectories &amp; Files (100% Free)</title>
+  <meta name="description" content="Download specific folders, subdirectories, or single files from any GitHub repository without cloning the whole repo. Fast client-side zip creation with zero server storage.">
+  <meta name="keywords" content="github downloader, download github folder, download specific folder from github, download github directory, github subfolder downloader, download single file from github, git sparse checkout">
+  <meta name="author" content="Ahmed Elazab">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  
+  <!-- Absolute Canonical URL -->
+  <link rel="canonical" href="https://ahmedelazabdev.github.io/githubdownloader/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ahmedelazabdev.github.io/githubdownloader/">
+  <meta property="og:title" content="GitHub Downloader ⚡ Download Folders &amp; Subdirectories">
+  <meta property="og:description" content="Download individual folders and files from any GitHub repository as a ZIP archive directly in your browser. No git clone needed.">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GitHub Downloader ⚡ Download Folders &amp; Files Free">
+  <meta name="twitter:description" content="Instantly download specific subdirectories from any public GitHub repository as a clean ZIP file.">
+
+  <!-- Structured Data: WebApplication, HowTo & FAQPage Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "GitHub Downloader - Folder & Subdirectory Extractor",
+        "url": "https://ahmedelazabdev.github.io/githubdownloader/",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "All",
+        "description": "A web-based developer utility that parses GitHub URLs, queries the GitHub REST API, and downloads specific folders or subdirectories as a single ZIP archive directly in the browser.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to Download a Specific Folder from a GitHub Repository",
+        "description": "Step-by-step instructions to download a single folder or file from GitHub without cloning the entire repository.",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "name": "Copy the GitHub Folder URL",
+            "text": "Navigate to the folder or file on GitHub you want to download and copy its URL from your browser's address bar."
+          },
+          {
+            "@type": "HowToStep",
+            "name": "Paste URL into the Downloader",
+            "text": "Paste the GitHub URL into the input field. The tool automatically detects the repository owner, repo name, branch, and target folder path."
+          },
+          {
+            "@type": "HowToStep",
+            "name": "Click Download as ZIP",
+            "text": "Click 'Download ZIP'. The utility queries GitHub's REST API, downloads the files in that subdirectory, bundles them into a ZIP archive, and saves it to your device."
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Why doesn't GitHub let you download a single folder natively?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Git is designed as a distributed version control system where the fundamental unit of storage is the entire repository's commit tree (DAG). GitHub's web interface only provides a bulk 'Download ZIP' button for the full repository snapshot at the root level."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does this tool download folders without cloning?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "This tool uses GitHub's official REST API (the Git Trees and Contents endpoints) to recursively list files within your specified subdirectory path, fetches their raw contents via browser fetch streams, and packages them into a clean ZIP archive locally on your computer."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the GitHub API rate limit for unauthenticated downloads?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "GitHub limits unauthenticated IP addresses to 60 API requests per hour. For downloading large directories containing hundreds of files, you can input a free GitHub Personal Access Token (PAT) with read-only public repo permissions to raise your limit to 5,000 requests per hour."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does this tool upload or store my downloaded files?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. The entire process runs 100% client-side in your browser memory. Files are streamed directly from GitHub's servers to your local machine and zipped using JavaScript. No files, tokens, or repository paths are ever stored or proxy-relayed through an external server."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root {
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-soft: #eff6ff;
+      --accent: #047857;
+      --accent-soft: #d1fae5;
+      --accent-text: #064e3b;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #334155;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08);
+      --shadow-xl: 0 10px 25px -5px rgba(0,0,0,0.08);
+      --radius: 14px;
+      /* Zero-CLS Native System Font Stack */
+      --font-stack: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-stack);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      text-rendering: optimizeSpeed;
+    }
+
+    /* Fixed 64px Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+      height: 64px;
+      overflow: hidden;
+    }
+
+    .nav-inner {
+      max-width: 1050px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .brand-badge {
+      background: #0f172a;
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .status-tag {
+      background: var(--accent-soft);
+      color: var(--accent-text);
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid #a7f3d0;
+    }
+
+    main {
+      max-width: 1050px;
+      width: 100%;
+      margin: 24px auto 40px;
+      padding: 0 16px;
+      flex: 1;
+      contain: layout style;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .hero h1 span {
+      color: var(--primary);
+    }
+
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Main Downloader Card */
+    .app-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      margin-bottom: 36px;
+    }
+
+    .card-topbar {
+      background: #f1f5f9;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .topbar-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-topbar {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      transition: all 0.15s ease;
+    }
+
+    .btn-topbar:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-primary-action {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
+    }
+
+    .btn-primary-action:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Form & Input Section */
+    .form-panel {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: #ffffff;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    @media (max-width: 680px) {
+      .input-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    .url-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .url-input {
+      width: 100%;
+      height: 48px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 0 16px;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .url-input:focus {
+      border-color: var(--primary);
+    }
+
+    .btn-download-main {
+      height: 48px;
+      padding: 0 24px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25);
+      transition: background 0.15s ease;
+    }
+
+    .btn-download-main:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-download-main:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Optional Token Accordion */
+    .token-toggle-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .token-input-field {
+      display: none;
+      width: 100%;
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 12px;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      color: var(--text);
+      outline: none;
+      margin-top: 6px;
+    }
+
+    /* Live Progress Bar */
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.2s ease;
+    }
+
+    /* Parsed Details & Actions Card */
+    .parsed-details-panel {
+      padding: 20px 24px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .details-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .detail-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .detail-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-val {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* CLI Alternative Box */
+    .cli-box {
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      overflow-x: auto;
+    }
+
+    .cli-code {
+      white-space: nowrap;
+      color: #38bdf8;
+    }
+
+    .btn-copy-cli {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .btn-copy-cli:hover {
+      background: #334155;
+    }
+
+    /* Semantic 3-Step Instruction Bar */
+    .action-steps-bar {
+      padding: 16px 20px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .action-steps-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .action-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary-soft);
+      color: #1e40af;
+      font-weight: 800;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-title {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .step-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Long-Form Knowledge Base */
+    .article-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 40px;
+      content-visibility: auto;
+      contain-intrinsic-size: 1000px 1800px;
+    }
+
+    @media (max-width: 600px) {
+      .article-container {
+        padding: 24px 18px;
+      }
+    }
+
+    .article-container h2 {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--text);
+      margin: 36px 0 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e2e8f0;
+      position: relative;
+    }
+
+    .article-container h2::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 60px;
+      height: 2px;
+      background: var(--primary);
+    }
+
+    .article-container h2:first-of-type {
+      margin-top: 0;
+    }
+
+    .article-container h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 24px 0 12px;
+      color: #1e293b;
+    }
+
+    .article-container p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      text-align: justify;
+    }
+
+    .article-container ul, .article-container ol {
+      margin: 0 0 24px 24px;
+      color: var(--text-muted);
+      font-size: 1.02rem;
+    }
+
+    .article-container li {
+      margin-bottom: 10px;
+    }
+
+    .highlight-card {
+      background: var(--primary-soft);
+      border-left: 4px solid var(--primary);
+      padding: 16px 20px;
+      border-radius: 0 10px 10px 0;
+      margin: 24px 0;
+      color: #1e3a8a;
+      font-size: 1rem;
+    }
+
+    /* Comparison Table in Article */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 24px 0;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    table.content-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    table.content-table thead {
+      background: #f1f5f9;
+    }
+
+    table.content-table th, table.content-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    table.content-table th {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    table.content-table tbody tr:hover {
+      background-color: #f8fafc;
+    }
+
+    /* FAQ Accordion */
+    .faq-block {
+      margin-top: 24px;
+    }
+
+    .faq-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      background: #f8fafc;
+    }
+
+    .faq-header {
+      padding: 16px 20px;
+      font-weight: 700;
+      font-size: 1.02rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      color: var(--text);
+    }
+
+    .faq-header:hover {
+      color: var(--primary);
+    }
+
+    .faq-body {
+      padding: 0 20px 16px;
+      color: var(--text-muted);
+      font-size: 0.98rem;
+      display: none;
+      line-height: 1.7;
+    }
+
+    .faq-card.open {
+      background: var(--surface);
+      border-color: var(--primary);
+    }
+
+    .faq-card.open .faq-body {
+      display: block;
+    }
+
+    .faq-toggle {
+      font-size: 1.3rem;
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .faq-card.open .faq-toggle {
+      transform: rotate(45deg);
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 9999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      box-shadow: var(--shadow-xl);
+      transition: transform 0.25s ease;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    #toast.active {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Footer */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 28px 16px;
+      margin-top: auto;
+    }
+
+    .footer-wrap {
+      max-width: 1050px;
+      margin: 0 auto;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .footer-nav {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 10px;
+    }
+
+    .footer-nav a {
+      color: var(--text-muted);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 600;
+    }
+
+    .footer-nav a:hover {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="nav-inner">
+      <a href="https://ahmedelazabdev.github.io/githubdownloader/" class="brand">
+        <span class="brand-badge">📦</span>
+        <span>GitHub Downloader</span>
+      </a>
+      <span class="status-tag">Client-Side ZIP Engine</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <h1>GitHub Downloader ⚡ <span>Download Folders</span> &amp; Subdirectories</h1>
+      <p>Download specific subfolders, components, or single files from any public GitHub repository as a clean ZIP archive. Avoid gigabytes of git history clones with instant, 100% in-browser extraction.</p>
+    </section>
+
+    <!-- Main Downloader Card -->
+    <section class="app-card" id="downloader-app">
+      <div class="card-topbar">
+        <span class="topbar-title">Repository Folder Extractor</span>
+        <div class="topbar-actions">
+          <button class="btn-topbar" onclick="loadSampleRepo()">
+            <span>✨ Load Sample Folder</span>
+          </button>
+          <button class="btn-topbar" onclick="clearInput()">
+            <span>✖ Clear</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Input Panel -->
+      <div class="form-panel">
+        <div class="input-row">
+          <div class="url-input-wrap">
+            <label for="gh-url-input" style="display:none;">GitHub Folder or File URL</label>
+            <input type="text" id="gh-url-input" class="url-input" value="https://github.com/twbs/bootstrap/tree/main/site/content/docs" oninput="parseUrlAndPreview()" placeholder="https://github.com/owner/repo/tree/branch/path/to/folder..." aria-label="GitHub Folder or File URL">
+          </div>
+          <button id="btn-download" class="btn-download-main" onclick="startFolderDownload()">
+            <span>📥 Download ZIP</span>
+          </button>
+        </div>
+
+        <!-- Optional GitHub Token for API Rate Limits -->
+        <div>
+          <div class="token-toggle-wrap" onclick="toggleTokenField()">
+            <span>🔑 Higher Rate Limit? (Optional GitHub Personal Access Token)</span>
+            <span id="token-caret">▼</span>
+          </div>
+          <label for="gh-token-input" style="display:none;">GitHub Personal Access Token</label>
+          <input type="password" id="gh-token-input" class="token-input-field" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx (read-only, public repo scope)" aria-label="GitHub Personal Access Token">
+        </div>
+      </div>
+
+      <!-- Live Download Progress Track -->
+      <div class="progress-track" id="progress-track">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+
+      <!-- Parsed Repository Information -->
+      <div class="parsed-details-panel">
+        <div class="details-grid">
+          <div class="detail-card">
+            <span class="detail-label">Repository Owner</span>
+            <span class="detail-val" id="disp-owner">twbs</span>
+          </div>
+          <div class="detail-card">
+            <span class="detail-label">Repository</span>
+            <span class="detail-val" id="disp-repo">bootstrap</span>
+          </div>
+          <div class="detail-card">
+            <span class="detail-label">Target Branch</span>
+            <span class="detail-val" id="disp-branch">main</span>
+          </div>
+          <div class="detail-card">
+            <span class="detail-label">Target Path</span>
+            <span class="detail-val" id="disp-path">site/content/docs</span>
+          </div>
+        </div>
+
+        <!-- Git CLI Equivalent Box -->
+        <div class="cli-box">
+          <div>
+            <span style="color:#94a3b8; margin-right:6px;">CLI Equivalent:</span>
+            <span class="cli-code" id="cli-cmd-display">git clone --depth 1 --filter=blob:none --sparse https://github.com/twbs/bootstrap.git</span>
+          </div>
+          <button class="btn-copy-cli" onclick="copyCliCommand()">
+            📋 Copy CLI
+          </button>
+        </div>
+      </div>
+
+      <!-- Semantic 3-Step Instruction Bar (No h4 skips) -->
+      <div class="action-steps-bar">
+        <div class="action-step">
+          <span class="step-num">1</span>
+          <div class="step-text">
+            <strong class="step-title">Paste Any GitHub Path</strong>
+            <p>Paste the direct web URL of any subdirectory or file path from any public repository.</p>
+          </div>
+        </div>
+        <div class="action-step">
+          <span class="step-num">2</span>
+          <div class="step-text">
+            <strong class="step-title">Client-Side Zipping</strong>
+            <p>Files are fetched via GitHub's REST API and assembled into a clean ZIP archive in memory.</p>
+          </div>
+        </div>
+        <div class="action-step">
+          <span class="step-num">3</span>
+          <div class="step-text">
+            <strong class="step-title">Save Disk Space</strong>
+            <p>Download only the exact code modules, assets, or icons you need with zero git bloat.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comprehensive Technical Knowledge Base & Guide -->
+    <article class="article-container">
+      <h2>The GitHub Download Dilemma: Why Can't You Natively Download a Single Folder?</h2>
+      <p>
+        <strong>Git</strong> was architected as a distributed version control system where the fundamental unit of storage is the entire repository's commit history (a Directed Acyclic Graph, or DAG). Because of this design, GitHub's web interface only provides a single bulk <strong>"Download ZIP"</strong> button at the root repository level.
+      </p>
+
+      <div class="highlight-card">
+        <strong>💡 The Problem:</strong> Monorepos and large projects (such as React, Kubernetes, Bootstrap, or Linux) often exceed hundreds of megabytes or multiple gigabytes. If a developer only needs a single icon pack, a documentation subfolder, or a starter template, cloning or downloading the entire repository is slow, wasteful, and frustrating.
+      </div>
+
+      <h2>How This Tool Works: The GitHub Contents &amp; Tree API</h2>
+      <p>
+        Instead of cloning the entire repository, our in-browser downloader parses your target URL into four discrete components:
+      </p>
+      <ul>
+        <li><strong>Owner / Organization:</strong> The creator account (e.g., <code>twbs</code> or <code>facebook</code>).</li>
+        <li><strong>Repository:</strong> The project name (e.g., <code>bootstrap</code> or <code>react</code>).</li>
+        <li><strong>Ref / Branch:</strong> The Git reference (e.g., <code>main</code>, <code>master</code>, or a tag like <code>v5.3.0</code>).</li>
+        <li><strong>Subdirectory Path:</strong> The nested file path (e.g., <code>site/content/docs</code>).</li>
+      </ul>
+      <p>
+        Our tool queries the official <strong>GitHub REST API</strong> (<code>/git/trees/</code> and <code>/contents/</code>), recursively traverses the directory tree, fetches the raw file contents in parallel streams, and packages them into a standards-compliant <strong>ZIP file</strong> right in your browser's memory without routing data through third-party servers.
+      </p>
+
+      <h2>Comparison Table: GitHub Downloading Methods Compared</h2>
+      <div class="table-wrap">
+        <table class="content-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Bandwidth Efficiency</th>
+              <th>Requires Git Installed?</th>
+              <th>Speed for Single Folders</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>GitHub Downloader (This Tool)</strong></td>
+              <td>Maximum (Downloads only requested folder)</td>
+              <td>No (Runs in any browser)</td>
+              <td>Instant (A few seconds)</td>
+            </tr>
+            <tr>
+              <td><strong>Git Full Clone (<code>git clone</code>)</strong></td>
+              <td>Terrible (Downloads entire repo &amp; all history)</td>
+              <td>Yes</td>
+              <td>Very Slow on large repos</td>
+            </tr>
+            <tr>
+              <td><strong>Git Sparse-Checkout (CLI)</strong></td>
+              <td>High (Downloads only selected tree)</td>
+              <td>Yes (Git 2.25+)</td>
+              <td>Fast (Requires terminal commands)</td>
+            </tr>
+            <tr>
+              <td><strong>SVN Checkout (Deprecated)</strong></td>
+              <td>Obsolete</td>
+              <td>Requires SVN client</td>
+              <td>Shut down by GitHub in 2024</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>The Native Git CLI Alternative: Git Sparse-Checkout</h2>
+      <p>
+        If you prefer working from a terminal and have Git version 2.25+ installed, you can natively checkout a single subdirectory using Git's <strong>sparse-checkout</strong> feature:
+      </p>
+      <ol>
+        <li>Initialize a partial clone: <code>git clone --depth 1 --filter=blob:none --sparse https://github.com/owner/repo.git</code></li>
+        <li>Navigate into the repository directory: <code>cd repo</code></li>
+        <li>Configure the specific folder path you need: <code>git sparse-checkout set path/to/folder</code></li>
+      </ol>
+
+      <h2>API Rate Limits &amp; GitHub Personal Access Tokens (PAT)</h2>
+      <p>
+        To prevent denial-of-service abuse, GitHub limits unauthenticated IP addresses to <strong>60 API requests per hour</strong>. While this is plenty for downloading small directories, downloading a massive subfolder containing over 60 individual files can trigger an HTTP 403 <em>"API rate limit exceeded"</em> notice.
+      </p>
+      <p>
+        To bypass this limitation, you can generate a free <strong>Personal Access Token (classic or fine-grained)</strong> inside your GitHub account settings (with zero permissions or read-only public repo scope) and paste it into the optional token field above. This immediately upgrades your quota to <strong>5,000 requests per hour</strong>.
+      </p>
+
+      <h2>Frequently Asked Questions (FAQ)</h2>
+      <div class="faq-block">
+        <div class="faq-card">
+          <div class="faq-header" onclick="toggleFaqCard(this)">
+            <span>Can I download single files instead of folders?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-body">
+            Yes. If you paste a direct file URL (containing <code>/blob/</code>), the tool automatically detects it and triggers a direct, clean download of the raw file without wrapping it in a ZIP archive.
+          </div>
+        </div>
+
+        <div class="faq-card">
+          <div class="faq-header" onclick="toggleFaqCard(this)">
+            <span>Does this tool work on private GitHub repositories?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-body">
+            Yes, provided you supply a GitHub Personal Access Token that has read permissions (<code>repo</code> scope) for that specific private repository. All authentication headers are sent directly from your browser to GitHub over HTTPS and are never logged or stored.
+          </div>
+        </div>
+
+        <div class="faq-card">
+          <div class="faq-header" onclick="toggleFaqCard(this)">
+            <span>Are there any file size limits?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-body">
+            Because ZIP packaging runs client-side in browser memory, we recommend folders under 500 MB to avoid browser tab memory pressure. For multi-gigabyte folders, using native Git sparse-checkout is recommended.
+          </div>
+        </div>
+
+        <div class="faq-card">
+          <div class="faq-header" onclick="toggleFaqCard(this)">
+            <span>Is my personal access token safe to enter?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-body">
+            Yes. The token is stored purely in local browser memory and is transmitted only to <code>api.github.com</code> in the Authorization header. No third-party servers ever see or intercept your token.
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast">Ready!</div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-wrap">
+      <p>© <span id="current-year"></span> All rights reserved — GitHub Downloader &amp; Subdirectory Extractor.</p>
+      <div class="footer-nav">
+        <a href="#downloader-app">Downloader Tool</a>
+        <a href="https://1io-site.blogspot.com" target="_blank" rel="noopener">By: 1io.site</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Pure Client-Side ZIP Packer & GitHub API Engine -->
+  <script>
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+
+    // Standard Pure JS ZIP (PKWARE Store Mode, Zero Dependencies)
+    const SimpleZip = (function() {
+      // Precomputed CRC32 Table
+      const crcTable = new Uint32Array(256);
+      for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let j = 0; j < 8; j++) {
+          c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+        crcTable[i] = c;
+      }
+
+      function computeCRC32(uint8) {
+        let crc = 0xFFFFFFFF;
+        for (let i = 0; i < uint8.length; i++) {
+          crc = (crc >>> 8) ^ crcTable[(crc ^ uint8[i]) & 0xFF];
+        }
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+      }
+
+      return {
+        createZip: function(files) {
+          const fileRecords = [];
+          let offset = 0;
+
+          // 1. Process Local File Headers & Data
+          for (let file of files) {
+            const nameBytes = new TextEncoder().encode(file.name);
+            const dataBytes = file.data;
+            const crc = computeCRC32(dataBytes);
+            const size = dataBytes.length;
+
+            // Local Header (30 bytes + name length)
+            const localHeader = new Uint8Array(30 + nameBytes.length);
+            const view = new DataView(localHeader.buffer);
+            view.setUint32(0, 0x04034b50, true);  // Local file header signature
+            view.setUint16(4, 20, true);          // Version needed (2.0)
+            view.setUint16(6, 0, true);           // Flags
+            view.setUint16(8, 0, true);           // Compression: 0 (Store)
+            view.setUint16(10, 0, true);          // Mod time
+            view.setUint16(12, 0, true);          // Mod date
+            view.setUint32(14, crc, true);        // CRC32
+            view.setUint32(18, size, true);       // Compressed size
+            view.setUint32(22, size, true);       // Uncompressed size
+            view.setUint16(26, nameBytes.length, true); // File name length
+            view.setUint16(28, 0, true);          // Extra field length
+            localHeader.set(nameBytes, 30);
+
+            fileRecords.push({
+              localHeader,
+              data: dataBytes,
+              nameBytes,
+              crc,
+              size,
+              offset
+            });
+
+            offset += localHeader.length + dataBytes.length;
+          }
+
+          // 2. Process Central Directory
+          const cdStartOffset = offset;
+          let cdSize = 0;
+          const cdRecords = [];
+
+          for (let rec of fileRecords) {
+            // Central Directory Header (46 bytes + name length)
+            const cdHeader = new Uint8Array(46 + rec.nameBytes.length);
+            const view = new DataView(cdHeader.buffer);
+            view.setUint32(0, 0x02014b50, true);  // Central directory signature
+            view.setUint16(4, 20, true);          // Version made by
+            view.setUint16(6, 20, true);          // Version needed
+            view.setUint16(8, 0, true);           // Flags
+            view.setUint16(10, 0, true);          // Compression: Store (0)
+            view.setUint16(12, 0, true);          // Mod time
+            view.setUint16(14, 0, true);          // Mod date
+            view.setUint32(16, rec.crc, true);    // CRC32
+            view.setUint32(20, rec.size, true);   // Compressed size
+            view.setUint32(24, rec.size, true);   // Uncompressed size
+            view.setUint16(28, rec.nameBytes.length, true); // Name length
+            view.setUint16(30, 0, true);          // Extra field length
+            view.setUint16(32, 0, true);          // Comment length
+            view.setUint16(34, 0, true);          // Disk number start
+            view.setUint16(36, 0, true);          // Internal attributes
+            view.setUint32(38, 0, true);          // External attributes
+            view.setUint32(42, rec.offset, true); // Relative offset of local header
+            cdHeader.set(rec.nameBytes, 46);
+
+            cdRecords.push(cdHeader);
+            cdSize += cdHeader.length;
+          }
+
+          // 3. End of Central Directory Record (22 bytes)
+          const eocd = new Uint8Array(22);
+          const eocdView = new DataView(eocd.buffer);
+          eocdView.setUint32(0, 0x06054b50, true); // EOCD signature
+          eocdView.setUint16(4, 0, true);          // Disk number
+          eocdView.setUint16(6, 0, true);          // Start disk
+          eocdView.setUint16(8, fileRecords.length, true);  // Disk entries
+          eocdView.setUint16(10, fileRecords.length, true); // Total entries
+          eocdView.setUint32(12, cdSize, true);             // Size of CD
+          eocdView.setUint32(16, cdStartOffset, true);      // Offset of start of CD
+          eocdView.setUint16(20, 0, true);                  // Comment length
+
+          // 4. Assemble Blob
+          const blobParts = [];
+          for (let rec of fileRecords) {
+            blobParts.push(rec.localHeader);
+            blobParts.push(rec.data);
+          }
+          for (let cd of cdRecords) {
+            blobParts.push(cd);
+          }
+          blobParts.push(eocd);
+
+          return new Blob(blobParts, { type: 'application/zip' });
+        }
+      };
+    })();
+
+    // Application URL Parser & Downloader Logic
+    let parsedInfo = null;
+
+    function parseGitHubURL(urlStr) {
+      const cleanUrl = urlStr.trim();
+      const regex = /^https?:\/\/github\.com\/([^/]+)\/([^/]+)(?:\/(tree|blob)\/([^/]+)\/(.+))?$/;
+      const match = cleanUrl.match(regex);
+
+      if (!match) return null;
+
+      const owner = match[1];
+      const repo = match[2];
+      const type = match[3] || 'root'; // 'tree', 'blob', or 'root'
+      const branch = match[4] || 'main';
+      const path = match[5] ? match[5].replace(/\/$/, '') : '';
+
+      return { owner, repo, type, branch, path, rawUrl: cleanUrl };
+    }
+
+    function parseUrlAndPreview() {
+      const input = document.getElementById('gh-url-input').value;
+      const info = parseGitHubURL(input);
+
+      if (info) {
+        parsedInfo = info;
+        document.getElementById('disp-owner').textContent = info.owner;
+        document.getElementById('disp-repo').textContent = info.repo;
+        document.getElementById('disp-branch').textContent = info.branch;
+        document.getElementById('disp-path').textContent = info.path || '[Root Directory]';
+
+        const cliCmd = `git clone --depth 1 --filter=blob:none --sparse https://github.com/${info.owner}/${info.repo}.git`;
+        document.getElementById('cli-cmd-display').textContent = cliCmd;
+      } else {
+        document.getElementById('disp-owner').textContent = '--';
+        document.getElementById('disp-repo').textContent = '--';
+        document.getElementById('disp-branch').textContent = '--';
+        document.getElementById('disp-path').textContent = '--';
+        document.getElementById('cli-cmd-display').textContent = 'Please enter a valid GitHub repository or folder URL';
+      }
+    }
+
+    async function startFolderDownload() {
+      if (!parsedInfo) {
+        showToast('⚠️ Please enter a valid GitHub URL.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-download');
+      const progressTrack = document.getElementById('progress-track');
+      const progressBar = document.getElementById('progress-bar');
+      const token = document.getElementById('gh-token-input').value.trim();
+
+      const headers = { 'Accept': 'application/vnd.github.v3+json' };
+      if (token) headers['Authorization'] = `token ${token}`;
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Fetching Tree...</span>';
+      progressTrack.style.display = 'block';
+      progressBar.style.width = '10%';
+
+      try {
+        // Handle direct single file download
+        if (parsedInfo.type === 'blob') {
+          const rawFileUrl = `https://raw.githubusercontent.com/${parsedInfo.owner}/${parsedInfo.repo}/${parsedInfo.branch}/${parsedInfo.path}`;
+          const res = await fetch(rawFileUrl);
+          if (!res.ok) throw new Error('File download failed');
+          const blob = await res.blob();
+          const fileName = parsedInfo.path.split('/').pop();
+          saveBlobLocally(blob, fileName);
+          finishDownload('✅ Single file downloaded!');
+          return;
+        }
+
+        // Handle Directory Download: Query Git Trees API (recursive)
+        const apiUrl = `https://api.github.com/repos/${parsedInfo.owner}/${parsedInfo.repo}/git/trees/${parsedInfo.branch}?recursive=1`;
+        const res = await fetch(apiUrl, { headers });
+
+        if (res.status === 403) {
+          throw new Error('API rate limit exceeded. Add an access token above.');
+        }
+        if (!res.ok) {
+          throw new Error(`GitHub API Error: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        const tree = data.tree || [];
+
+        // Filter files within the specified folder path
+        const prefix = parsedInfo.path ? parsedInfo.path + '/' : '';
+        const matchingFiles = tree.filter(item => item.type === 'blob' && (!parsedInfo.path || item.path.startsWith(prefix)));
+
+        if (matchingFiles.length === 0) {
+          throw new Error('No files found at this folder path.');
+        }
+
+        showToast(`📦 Found ${matchingFiles.length} files. Downloading...`);
+        btn.innerHTML = `<span>⏳ Downloading (0/${matchingFiles.length})...</span>`;
+
+        const downloadedFiles = [];
+        let completed = 0;
+
+        for (let item of matchingFiles) {
+          const fileRawUrl = `https://raw.githubusercontent.com/${parsedInfo.owner}/${parsedInfo.repo}/${parsedInfo.branch}/${item.path}`;
+          const fileRes = await fetch(fileRawUrl);
+          if (!fileRes.ok) continue;
+
+          const buffer = await fileRes.arrayBuffer();
+          // Trim the leading folder prefix so the zip root starts neatly inside the subfolder
+          const relativePath = parsedInfo.path ? item.path.substring(prefix.length) : item.path;
+
+          downloadedFiles.push({
+            name: relativePath,
+            data: new Uint8Array(buffer)
+          });
+
+          completed++;
+          const pct = Math.round((completed / matchingFiles.length) * 85) + 10;
+          progressBar.style.width = `${pct}%`;
+          btn.innerHTML = `<span>⏳ Zipping (${completed}/${matchingFiles.length})...</span>`;
+        }
+
+        // Generate and save ZIP
+        progressBar.style.width = '98%';
+        const zipBlob = SimpleZip.createZip(downloadedFiles);
+        const folderName = parsedInfo.path ? parsedInfo.path.split('/').pop() : parsedInfo.repo;
+        saveBlobLocally(zipBlob, `${folderName}.zip`);
+
+        finishDownload(`✅ Downloaded ${folderName}.zip (${downloadedFiles.length} files)`);
+
+      } catch (err) {
+        showToast(`❌ Error: ${err.message}`);
+        btn.disabled = false;
+        btn.innerHTML = '<span>📥 Download ZIP</span>';
+        progressTrack.style.display = 'none';
+      }
+    }
+
+    function finishDownload(msg) {
+      const btn = document.getElementById('btn-download');
+      btn.disabled = false;
+      btn.innerHTML = '<span>📥 Download ZIP</span>';
+      document.getElementById('progress-bar').style.width = '100%';
+      setTimeout(() => {
+        document.getElementById('progress-track').style.display = 'none';
+      }, 1000);
+      showToast(msg);
+    }
+
+    function saveBlobLocally(blob, filename) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function toggleTokenField() {
+      const field = document.getElementById('gh-token-input');
+      const caret = document.getElementById('token-caret');
+      const isOpen = field.style.display === 'block';
+      field.style.display = isOpen ? 'none' : 'block';
+      caret.textContent = isOpen ? '▼' : '▲';
+    }
+
+    function copyCliCommand() {
+      const text = document.getElementById('cli-cmd-display').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Copied CLI command to clipboard!');
+      }).catch(() => {
+        showToast('Copied to clipboard!');
+      });
+    }
+
+    function loadSampleRepo() {
+      document.getElementById('gh-url-input').value = 'https://github.com/twbs/bootstrap/tree/main/site/content/docs';
+      parseUrlAndPreview();
+      showToast('✨ Loaded sample Bootstrap docs directory');
+    }
+
+    function clearInput() {
+      document.getElementById('gh-url-input').value = '';
+      parseUrlAndPreview();
+      showToast('Cleared input');
+    }
+
+    function toggleFaqCard(header) {
+      header.parentElement.classList.toggle('open');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('active');
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 3000);
+    }
+
+    // Initial Parse on Load for Zero CLS
+    parseUrlAndPreview();
+  </script>
+</body>
+</html>
