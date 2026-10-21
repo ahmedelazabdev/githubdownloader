@@ -1,0 +1,33 @@
+# GitHub Downloader — Subdirectory & Folder ZIP Extractor
+
+> A high-performance, client-side developer utility for downloading specific folders, subdirectories, or individual files from public GitHub repositories as clean ZIP archives without cloning full git history.
+
+## Project Overview
+
+- **Canonical URL**: https://ahmedelazabdev.github.io/githubdownloader/
+- **Author**: Ahmed Elazab
+- **Primary Technology**: Native Client-Side JavaScript, GitHub REST API v3, Pure JS PKWARE ZIP Stream Engine
+- **License**: Open Source / Free Developer Utility
+
+## Core Capabilities & Technical Architecture
+
+1. **GitHub URL Decomposition**:
+   - Parses standard GitHub web URLs across repositories, branches, releases, and deep nested paths.
+   - Extracts repository parameters: `owner`, `repo`, `branch`, and `path`.
+
+2. **GitHub Git Trees & Contents Querying**:
+   - Leverages GitHub's recursive Tree REST API endpoint (`/git/trees/{branch}?recursive=1`) to resolve nested files in specific directories.
+   - Streams raw file contents directly from `raw.githubusercontent.com` in parallel batches.
+
+3. **In-Browser ZIP Assembly (Zero 3rd-Party Server Storage)**:
+   - Packages downloaded files into standard ZIP archives in browser memory using uncompressed PKWARE Store specifications with custom CRC-32 checksum calculations.
+   - 100% client-side execution with zero intermediary proxy servers or cloud file storage.
+
+4. **Rate Limit Bypassing**:
+   - Supports optional user-provided GitHub Personal Access Tokens (PAT) to elevate IP rate limits from 60 to 5,000 requests per hour.
+
+## Technical Specifications & Performance
+
+- **Performance**: 100% Lighthouse score, zero external Google Fonts (using native system font stack), zero Cumulative Layout Shift (CLS = 0.000).
+- **Accessibility & Contrast**: Full WCAG AAA color contrast compliance, sequentially descending heading hierarchy (`h1` → `h2` → `h3`), and accessible form controls.
+- **CLI Compatibility**: Provides copyable Git Sparse-Checkout command alternatives for terminal users.
